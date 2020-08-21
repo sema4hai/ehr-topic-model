@@ -99,3 +99,6 @@ Makefile
 requirements.txt
 setup.py
 test_environment.py
+
+# Virtual env
+.venv/
