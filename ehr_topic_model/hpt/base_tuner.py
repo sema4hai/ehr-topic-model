@@ -47,15 +47,15 @@ class BaseTuner:
             direction=direction,
             load_if_exists=resume,
         )
-        self.study.optimize(
-            objective=self.objective, n_trials=self.trials, n_jobs=n_jobs
-        )
+        self.study.optimize(func=self.objective, n_trials=self.trials, n_jobs=n_jobs)
 
         step: str
         seed_params: Mapping[str, Optional[int]] = {
             "{}__random_state".format(step[0]): seed
-            for step in self.pipeline
+            for step in self.pipeline.steps
             if "random_state" in step[1].get_params().keys()
         }
 
-        return self.pipeline(**self.study.best_params, **seed_params).fit(self.X)
+        return self.pipeline.set_params(**self.study.best_params, **seed_params).fit(
+            self.X
+        )
