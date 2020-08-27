@@ -1,0 +1,39 @@
+data_file: "file.csv"
+stopwords: "stopwords.txt"
+
+tuner:
+  trials: 5
+  study:
+    study_name: test
+    storage: sqlite_url
+    seed: 888
+    direction: minimize
+    resume: true
+  optimize:
+    n_jobs: 1
+
+vectorizer_hparams:
+  max_df:
+    - 0.7
+    - 1.0
+
+lda_hparams:
+  alpha:
+    - 0.0
+    - 1.0
+  beta:
+    - 0.0
+    - 1.0
+  num_topics:
+    - 1
+    - 100
+  iterations:
+    - 10
+    - 500
+  decay:
+    - 0.5
+    - 1.0
+  offset:
+    - 10.0
+    - 100.0
+
