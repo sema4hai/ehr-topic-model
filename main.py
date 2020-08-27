@@ -25,6 +25,13 @@ def _score_model(tuner: BaseTuner, output_dpath: Path) -> None:
     )
     model_name = est[-1].__class__.__name__
     print("{}: [Mimno Coherence: {}]".format(model_name, tuner.study.best_value))
+
+    # TODO:
+    # - print topic top words
+    # - save topic top words to table file?
+    # - rename this function to something more sensible, or maybe this would be
+    #   different function
+
     joblib.dump(value=est, filename=Path(output_dpath, "{}.pkl".format(model_name)))
 
 
@@ -33,9 +40,11 @@ def main(pipeline_idx: int = 0) -> None:
     # Load data
     project_home: Path = Path(__file__).parent
     X: pd.DataFrame = pd.read_csv(
-        Path(project_home, "config", CONFIG["data_file"]), index_col=0
+        Path(project_home, "data", CONFIG["data_file"]), index_col=0
     )
     _ = X.apply(func=remove_nums, axis="columns")  # remove numbers
+
+    # TODO: refactor preprocessing steps into single tokenizer class
 
     # Load custom stopwords
     custom_stopwords: List[str] = []
@@ -55,7 +64,9 @@ def main(pipeline_idx: int = 0) -> None:
                 ]
             ),
             hparams=dict(
-                (k, v) for k, v in CONFIG.items() if k.split("_")[1] == "hparams"
+                (k, v)
+                for k, v in CONFIG.items()
+                if len(k.split("_")) > 1 and k.split("_")[1] == "hparams"
             ),
             X=X.iloc[:, 0],
         ),
