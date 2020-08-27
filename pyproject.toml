@@ -13,14 +13,10 @@ pandas = "*"
 pyyaml = "*"
 scipy = "*"
 sklearn = "*"
-spacy = "*"
 tmtoolkit = "*"
 
 [tool.poetry.dev-dependencies]
 ipykernel = "*"
-
-[tool.mypy]
-ignore_missing_imports = true
 
 [build-system]
 requires = ["poetry>=0.12"]

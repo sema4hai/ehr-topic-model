@@ -17,13 +17,13 @@ class BaseTuner:
         self,
         trials: int,
         pipeline: Pipeline,
-        hparams: Mapping[str, Union[str, tuple]],
+        hparams: Mapping[str, Mapping[str, Union[str, tuple]]],
         X: Series,
     ) -> None:
         """BaseTuner constructor."""
         self.pipeline: Pipeline = pipeline
         self.trials: int = trials
-        self.hparams: Mapping[str, Union[str, tuple]] = hparams
+        self.hparams: Mapping[str, Mapping[str, Union[str, tuple]]] = hparams
         self.X: Series = X
 
     @abstractmethod
@@ -34,10 +34,11 @@ class BaseTuner:
         self,
         study_name: str,
         storage: str,
-        seed: Optional[int] = 0,
-        direction: Optional[str] = "minimize",
-        n_jobs: Optional[int] = 1,
-        resume: Optional[bool] = False,
+        seed: Optional[int],
+        direction: Optional[str],
+        n_jobs: Optional[int],
+        resume: Optional[bool] = True,
+        **kwargs
     ) -> Pipeline:
         """Tune hyperparameters."""
         self.study: Study = create_study(
