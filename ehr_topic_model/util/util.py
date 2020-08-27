@@ -12,3 +12,7 @@ def coherence(pipeline: Pipeline, X: Series) -> float:
     dtm: csr_matrix = pipeline.named_steps["vect"].transform(X)
     topic_word_distr: ndarray = pipeline.named_steps["decomp"].components_
     return -mimno_tc(topic_word_distrib=topic_word_distr, dtm=dtm, return_mean=True)
+
+
+def remove_nums(X: Series) -> None:
+    X.iat[0] = "".join(c for c in X.iat[0] if not c.isdigit())
