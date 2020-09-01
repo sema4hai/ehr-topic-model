@@ -102,3 +102,5 @@ models/
 config/config.yml
 config/stopwords.txt
 
+# Notebooks
+notebooks/
