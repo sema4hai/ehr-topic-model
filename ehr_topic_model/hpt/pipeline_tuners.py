@@ -3,7 +3,7 @@
 from typing import Dict, Mapping, Tuple, Union
 
 from ehr_topic_model.hpt.base_tuner import BaseTuner
-from ehr_topic_model.util.util import coherence
+from ehr_topic_model.util import coherence
 from optuna import Trial
 from pandas import Series
 from sklearn.pipeline import Pipeline
