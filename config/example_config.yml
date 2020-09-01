@@ -1,5 +1,6 @@
-data_file: "file.csv"
-stopwords: "stopwords.txt"
+data_file: file.csv
+stopwords: stopwords.txt
+number_of_topic_top_words: 10
 
 tuner:
   trials: 5
@@ -19,13 +20,13 @@ vectorizer_hparams:
 
 lda_hparams:
   alpha:
-    - 0.0
+    - 10.0e-5
     - 1.0
   beta:
-    - 0.0
+    - 10.0e-5
     - 1.0
   num_topics:
-    - 1
+    - 3
     - 100
   iterations:
     - 10

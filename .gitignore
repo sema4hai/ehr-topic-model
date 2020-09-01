@@ -97,3 +97,10 @@ log/
 
 # Models
 models/
+
+# Real config files
+config/config.yml
+config/stopwords.txt
+
+# Notebooks
+notebooks/
