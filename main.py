@@ -21,7 +21,7 @@ CONFIG: Dict[str, Any] = {}
 
 
 def _save_topics(topics: str, output_dpath: Path) -> None:
-    with Path(output_dpath, "topics.txt").open("w") as topic_f:
+    with Path(output_dpath, "topics.tsv").open("w") as topic_f:
         topic_f.write(topics)
 
 
@@ -37,7 +37,11 @@ def _score_model(tuner: BaseTuner, output_dpath: Path) -> None:
             pad=print_pad, model=model_name, metric_val=tuner.study.best_value
         )
     )
-    topics: str = topic_top_words(est[1], est[0].get_feature_names(), 10)
+    topics: str = topic_top_words(
+        model=est[1],
+        feature_names=est[0].get_feature_names(),
+        n_top_words=CONFIG["number_of_topic_top_words"],
+    )
     _save_topics(topics=topics, output_dpath=output_dpath)
 
     joblib.dump(value=est, filename=Path(output_dpath, "{}.pkl".format(model_name)))
