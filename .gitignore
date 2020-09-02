@@ -104,3 +104,6 @@ config/stopwords.txt
 
 # Notebooks
 notebooks/
+
+# output
+output/
