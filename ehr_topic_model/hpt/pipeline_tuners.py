@@ -10,6 +10,32 @@ from sklearn.pipeline import Pipeline
 
 
 class CountVectorizerLdaTuner(BaseTuner):
+    """
+    Base object for pipeline tuners.
+
+    Parameters
+    ----------
+    pipeline : sklearn.pipeline.Pipeline
+       Topic model pipeline.
+    trials : int
+       Number of optuna trials to perform.
+    hparams : dict of {str:dict of {str:tuple}}
+       Dictionary of hyperparameters for each component.
+    X : pd.Series
+       Data.
+
+    Attributes
+    ----------
+    pipeline : sklearn.pipeline.Pipeline
+       Topic model pipeline.
+    trials : int
+       Number of optuna trials to perform.
+    hparams : dict of {str:dict of {str:tuple}}
+       Dictionary of hyperparameters for each component.
+    X : pd.Series
+       Data.
+    """
+
     def __init__(
         self,
         trials: int,
@@ -22,6 +48,19 @@ class CountVectorizerLdaTuner(BaseTuner):
         super().__init__(trials=trials, pipeline=pipeline, hparams=hparams, X=X)
 
     def objective(self, trial: Trial) -> float:
+        """
+        Optuna optimization method.
+
+        Parameters
+        ----------
+        trial : optuna.Trial
+            An optuna trial object.
+
+        Returns
+        -------
+        float
+            The performance evaluation metric value for a single trial.
+        """
         suggest: Dict[str, float] = {
             "vect__max_df": trial.suggest_uniform(
                 name="vect__max_df",
@@ -59,7 +98,5 @@ class CountVectorizerLdaTuner(BaseTuner):
                 high=self.hparams["lda_hparams"]["offset"][1],
             ),
         }
-
         est: Pipeline = self.pipeline.set_params(**suggest).fit(self.X)
-
         return coherence(pipeline=est, X=self.X)

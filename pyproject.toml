@@ -6,12 +6,10 @@ authors = ["Michael (Minghao) Li <minghao.li-external@sema4genomics.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.8"
-gensim = "*"
 numpy = "*"
 optuna = "*"
 pandas = "*"
 pyyaml = "*"
-scipy = "*"
 sklearn = "*"
 tmtoolkit = "*"
 
