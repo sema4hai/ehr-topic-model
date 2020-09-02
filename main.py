@@ -105,7 +105,7 @@ def _score_model(tuner: BaseTuner, output_dpath: Path) -> None:
     print_pad: str = "\n=====\n"  # padding
     model_name: str = est[-1].__class__.__name__
     print(
-        "{pad}Model:\t\t{model}\nTopic Coherence:\t{metric_val}{pad}".format(
+        "{pad}Model:\t\t\t{model}\nTopic Coherence:\t{metric_val}{pad}".format(
             pad=print_pad, model=model_name, metric_val=tuner.study.best_value
         )
     )

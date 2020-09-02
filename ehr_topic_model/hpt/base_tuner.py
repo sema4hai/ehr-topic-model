@@ -1,7 +1,7 @@
 # ehr_topic_model/hpt/base_tuner.py
 
 from abc import abstractmethod
-from typing import Mapping, NoReturn, Optional, Union
+from typing import Dict, Mapping, NoReturn, Union
 
 from optuna import Study, Trial, create_study
 from pandas import Series
@@ -97,11 +97,19 @@ class BaseTuner:
 
         # Set proper seed parameter names for use as kwargs.
         step: str
-        seed_params: Mapping[str, int] = {
+        seed_params: Dict[str, int] = {
             "{}__random_state".format(step[0]): seed
             for step in self.pipeline.steps
             if "random_state" in step[1].get_params().keys()
         }
+
+        # Quick print
+        print("\nBest Params:\n")
+        k: str
+        v: Union[float, int]
+        for k, v in self.study.best_params.items():
+            print("{k}:\t{v}".format(k=k, v=v))
+
         return self.pipeline.set_params(**self.study.best_params, **seed_params).fit(
             self.X
         )
