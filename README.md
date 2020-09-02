@@ -14,6 +14,8 @@ A topic modeling pipeline for EHR notes.
 * scikit-learn 0.23.2
 * tmtoolkit 0.10.0
 
+For the Python packages (numpy onwards), they are handled by Poetry so just make sure the first 3 are installed.
+
 ### Installation
 #### Poetry
 Make sure you have [Poetry](https://python-poetry.org/) installed first. Refer to their docs for installation instructions.
@@ -40,7 +42,7 @@ poetry install --no-dev
 ### Training
 Run `main.py` with Poetry to use the virtualenv.
 ```sh
-poetry run main.py -c config/config.yml -p 0
+poetry run python main.py -c config/config.yml -p 0
 ```
 
 ### Inference
@@ -49,7 +51,7 @@ poetry run main.py -c config/config.yml -p 0
 * Topics require human interpretation, edit the topics file under `models/` or leave as the default names. Point the `topics_file` option to this file.
 Similar to training, run `topic.py` with Poetry.
 ```sh
-poetry run topic.py -c config/config.yml
+poetry run python topic.py -c config/config.yml
 ```
 
 ## Built With
