@@ -1,5 +1,6 @@
 # main.py
 
+import sys
 from argparse import ArgumentParser, Namespace, RawTextHelpFormatter
 from pathlib import Path
 from textwrap import dedent
@@ -17,65 +18,142 @@ from sklearn.pipeline import Pipeline
 from ehr_topic_model.hpt import BaseTuner, CountVectorizerLdaTuner
 from ehr_topic_model.util import remove_nums, topic_top_words
 
+# Global configuration dict.
 CONFIG: Dict[str, Any] = {}
 
 
-def _save_topics(topics: str, output_dpath: Path) -> None:
-    with Path(output_dpath, "topics.tsv").open("w") as topic_f:
+def _load_data(dpath: Path) -> pd.Series:
+    """
+    Load data from CSV.
+    File should contain columns: `note_id` and `full_note_norm`.
+
+    Parameters
+    ----------
+    dpath : pathlib.Path
+        The directory containing the data CSV.
+
+    Returns
+    -------
+    pd.Series
+        List of documents.
+    """
+    X: pd.DataFrame = pd.read_csv(
+        filepath_or_buffer=Path(dpath, CONFIG["data_file"]),
+        index_col="note_id",
+        usecols=["note_id", "full_note_norm"],
+    )
+    _ = X.apply(func=remove_nums, axis="columns")  # remove numbers from text
+    return X.iloc[:, 0]
+
+
+def _load_stopwords(dpath: Path) -> List[str]:
+    """
+    Load stopwords from file.
+
+    Parameters
+    ----------
+    dpath : pathlib.Path
+       The directory containing the stopwords file.
+
+    Returns
+    -------
+    list of str
+        Array of stopwords.
+    """
+    stopwords: List[str] = []
+    line: str
+    with Path(dpath, CONFIG["stopwords"]).open() as sw_f:
+        for line in sw_f:
+            stopwords.append(line.rstrip("\n"))
+    return stopwords
+
+
+def _save_topics(topics: str, model_name: str, output_dpath: Path) -> None:
+    """
+    Write topics and top words to TSV file.
+
+    Parameters
+    ----------
+    topics : str
+        Formatted topics string. In the format of "Topic_#:\t{top words}\n"
+    model_name : str
+        The name of the topic model.
+    output_dpath : pathlib.Path
+        The output directory.
+    """
+    output_dpath.mkdir(exist_ok=True)
+    with Path(output_dpath, "{}_topics.tsv".format(model_name)).open("w") as topic_f:
         topic_f.write(topics)
 
 
 def _score_model(tuner: BaseTuner, output_dpath: Path) -> None:
-    """Tune and score models; resume as necessary."""
+    """
+    Tune, score, and save the topic model.
+
+    Parameters
+    ----------
+    tuner : ehr_topic_model.hpt.BaseTuner
+        The tuner object for the topic model.
+    output_dpath : pathlib.Path
+        The output directory.
+    """
     est: Pipeline = tuner.tune(
         **CONFIG["tuner"]["study"], **CONFIG["tuner"]["optimize"]
     )
+
+    # Printing topic model and evaluation metric value to stdout.
+    print_pad: str = "\n=====\n"  # padding
     model_name: str = est[-1].__class__.__name__
-    print_pad: str = "\n=====\n"
     print(
-        "{pad}{model}\nMimno Coherence: {metric_val}{pad}".format(
+        "{pad}Model:\t\t{model}\nTopic Coherence:\t{metric_val}{pad}".format(
             pad=print_pad, model=model_name, metric_val=tuner.study.best_value
         )
     )
-    topics: str = topic_top_words(
+
+    # Printing topics and top words to stdout.
+    # Formatted topic string is extracted to write to file.
+    fmt_topics_topwords: str = topic_top_words(
         model=est[1],
         feature_names=est[0].get_feature_names(),
         n_top_words=CONFIG["number_of_topic_top_words"],
     )
-    _save_topics(topics=topics, output_dpath=output_dpath)
+    _save_topics(
+        topics=fmt_topics_topwords, model_name=model_name, output_dpath=output_dpath
+    )
 
+    # Writing serialized model to disk.
     joblib.dump(value=est, filename=Path(output_dpath, "{}.pkl".format(model_name)))
 
 
-def _load_stopwords(project_home: Path) -> List[str]:
-    """Load stopwords from file."""
-    stopwords: List[str] = []
-    line: str
-    with Path(project_home, "config", CONFIG["stopwords"]).open() as sw_f:
-        for line in sw_f:
-            stopwords.append(line.rstrip("\n"))
+def main(pipeline_idx: int) -> None:
+    """
+    Train topic model.
 
-    return stopwords
+    Parameters
+    ----------
+    pipeline_idx : int
+        Index of pipeline to use.
+    """
+    # Exit program if pipeline_idx = 1 as tfidf+NMF hasn't been implemented yet.
+    if pipeline_idx == 1:
+        sys.exit(
+            (
+                "The TF-IDF + NMF pipeline hasn't been implemented yet, sorry! "
+                "Please rerun the program with --pipeline set to 0."
+            )
+        )
 
-
-def main(pipeline_idx: int = 0) -> None:
-    """Train models."""
-    # Load data
     project_home: Path = Path(__file__).parent
-    X: pd.DataFrame = pd.read_csv(
-        Path(project_home, "data", CONFIG["data_file"]), index_col=0
-    )
-    _ = X.apply(func=remove_nums, axis="columns")  # remove numbers
+    X: pd.Series = _load_data(Path(project_home, "data"))
+    custom_stopwords: List[str] = _load_stopwords(Path(project_home, "config"))
 
-    # Load custom stopwords
-    custom_stopwords: List[str] = _load_stopwords(project_home=project_home)
-
+    # Initialize tuner objects, ordered by index.
     tuners: Tuple[BaseTuner, ...] = (
         CountVectorizerLdaTuner(
             trials=CONFIG["tuner"]["trials"],
             pipeline=Pipeline(
                 [
-                    ("vect", CountVectorizer(stop_words=custom_stopwords),),
+                    ("vect", CountVectorizer(stop_words=custom_stopwords)),
                     ("decomp", LatentDirichletAllocation()),
                 ]
             ),
@@ -84,17 +162,18 @@ def main(pipeline_idx: int = 0) -> None:
                 for k, v in CONFIG.items()
                 if len(k.split("_")) > 1 and k.split("_")[1] == "hparams"
             ),
-            X=X.iloc[:, 0],
+            X=X,
         ),
     )
 
-    output_dpath: Path = Path(project_home, "models")
-    _score_model(tuner=tuners[pipeline_idx], output_dpath=output_dpath)
+    _score_model(tuner=tuners[pipeline_idx], output_dpath=Path(project_home, "models"))
 
 
+# CLI
 if __name__ == "__main__":
     parser: ArgumentParser = ArgumentParser(
-        description="tmp description", formatter_class=RawTextHelpFormatter
+        description="Train topic models on EHR notes.",
+        formatter_class=RawTextHelpFormatter,
     )
     parser.add_argument(
         "-c",
@@ -112,11 +191,12 @@ if __name__ == "__main__":
         help=dedent(
             """\
             Topic modeling pipeline (default: 0)
-            0 -> Term Frequency + Latent Dirichlet Allocation
+            0 -> Term Counts + Latent Dirichlet Allocation
             1 -> TF-IDF + Non-negative Matrix Factorization
             """
         ),
     )
+
     args: Namespace = parser.parse_args()
     with Path(args.config).open() as config_f:
         CONFIG = yaml.load(stream=config_f, Loader=yaml.FullLoader)

@@ -4,22 +4,46 @@ from typing import List, Union
 
 from numpy import ndarray
 from pandas import Series
-from scipy.sparse.csr import csr_matrix
 from sklearn.decomposition import NMF, LatentDirichletAllocation
 from sklearn.pipeline import Pipeline
 from tmtoolkit.topicmod.evaluate import metric_coherence_mimno_2011 as mimno_tc
 
 
 def coherence(pipeline: Pipeline, X: Series) -> float:
-    """Calculate topic coherence (Mimno 2011)."""
-    dtm: csr_matrix = pipeline.named_steps["vect"].transform(X)
-    topic_word_distrib: ndarray = pipeline.named_steps["decomp"].components_
-    return -mimno_tc(topic_word_distrib=topic_word_distrib, dtm=dtm, return_mean=True)
+    """
+    Calculate topic coherence (Mimno 2011).
+
+    Parameters
+    ----------
+    pipeline sklearn.pipeline.Pipeline
+        Scikit-learn pipeline with a vectorizer and a decomposition component fit to
+        data.
+    X: pandas.Series
+        The data the component is fit to; used to extract the document-term matrix.
+
+    Returns
+    -------
+    The negated topic coherence value from Mimno 2011, to be minimized.
+    """
+    return -mimno_tc(
+        topic_word_distrib=pipeline.named_steps["decomp"].components_,
+        dtm=pipeline.named_steps["vect"].transform(X),
+        return_mean=True,
+    )
 
 
-def remove_nums(X: Series) -> None:
+def remove_nums(row: Series) -> None:
+    """
+    Removes numbers from documents.
+    To be used in conjunction with pandas.DataFrame.apply()
+
+    Parameters
+    ----------
+    X : pandas.Series
+        A row within the DataFrame containing text.
+    """
     c: str
-    X.iat[0] = "".join(c for c in X.iat[0] if not c.isdigit())
+    row.iat[0] = "".join(c for c in row.iat[0] if not c.isdigit())
 
 
 def topic_top_words(
@@ -27,6 +51,23 @@ def topic_top_words(
     feature_names: List[str],
     n_top_words: int,
 ) -> str:
+    """
+    Print and format topic top words.
+
+    Parameters
+    ----------
+    model : sklearn.decomposition.NMF or sklearn.decomposition.LatentDirichletAllocation
+        The topic model.
+    feature_names : list of str
+        The words/terms that exist within the documents the model is fit to.
+    n_top_words : int
+        Number of top words to display.
+
+    Returns
+    -------
+    str
+        Formatted topics and top words string to write to file.
+    """
     topic_idx: int
     topic: ndarray
     message: str
@@ -39,5 +80,5 @@ def topic_top_words(
         )
         print(message)
         output += message + "\n"
-
+    print()  # extra newline for stdout formatting
     return output

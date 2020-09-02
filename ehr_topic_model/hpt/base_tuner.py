@@ -11,16 +11,37 @@ from sklearn.pipeline import Pipeline
 class BaseTuner:
     """
     Base object for pipeline tuners.
+
+    Parameters
+    ----------
+    pipeline : sklearn.pipeline.Pipeline
+        Topic model pipeline.
+    trials : int
+        Number of optuna trials to perform.
+    hparams : dict of {str:dict of {str:tuple}}
+        Dictionary of hyperparameters for each component.
+    X : pd.Series
+        Data.
+
+    Attributes
+    ----------
+    pipeline : sklearn.pipeline.Pipeline
+        Topic model pipeline.
+    trials : int
+        Number of optuna trials to perform.
+    hparams : dict of {str:dict of {str:tuple}}
+        Dictionary of hyperparameters for each component.
+    X : pd.Series
+        Data.
     """
 
     def __init__(
         self,
-        trials: int,
         pipeline: Pipeline,
+        trials: int,
         hparams: Mapping[str, Mapping[str, Union[str, tuple]]],
         X: Series,
     ) -> None:
-        """BaseTuner constructor."""
         self.pipeline: Pipeline = pipeline
         self.trials: int = trials
         self.hparams: Mapping[str, Mapping[str, Union[str, tuple]]] = hparams
@@ -28,19 +49,44 @@ class BaseTuner:
 
     @abstractmethod
     def objective(self, trial: Trial) -> Union[float, NoReturn]:
+        """Optuna objective method. Implement in child classes."""
         raise NotImplementedError
 
     def tune(
         self,
         study_name: str,
         storage: str,
-        seed: Optional[int],
-        direction: Optional[str],
-        n_jobs: Optional[int],
-        resume: Optional[bool] = True,
+        seed: int,
+        direction: str,
+        n_jobs: int,
+        resume: bool = True,
         **kwargs
     ) -> Pipeline:
-        """Tune hyperparameters."""
+        """
+        Tune hyperparameters.
+
+        Parameters
+        ----------
+        study_name : str
+            Name of the study.
+        storage : str
+            SQLite URI for local storage.
+        seed : int
+            Random state.
+        direction : str
+            Direction of optimization.
+        n_jobs : int
+            Parallelization.
+        resume : bool
+            Resume previously saved study or begin new study.
+        **kwargs
+            Hyperparameter keyword arguments passed to the topic model Pipeline.
+
+        Returns
+        -------
+        sklearn.pipeline.Pipeline
+            Initialized topic model pipeline with set hyperparameters.
+        """
         self.study: Study = create_study(
             study_name=study_name,
             storage=storage,
@@ -49,13 +95,13 @@ class BaseTuner:
         )
         self.study.optimize(func=self.objective, n_trials=self.trials, n_jobs=n_jobs)
 
+        # Set proper seed parameter names for use as kwargs.
         step: str
-        seed_params: Mapping[str, Optional[int]] = {
+        seed_params: Mapping[str, int] = {
             "{}__random_state".format(step[0]): seed
             for step in self.pipeline.steps
             if "random_state" in step[1].get_params().keys()
         }
-
         return self.pipeline.set_params(**self.study.best_params, **seed_params).fit(
             self.X
         )
