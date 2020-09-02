@@ -60,5 +60,7 @@ poetry run topic.py -c config/config.yml
 
 ## License
 TBD
+
 (sorry, not sure what license this should be under as this project was created as part of my work - still trying to figure this out)
+
 (if you have any suggestions I'd be happy to hear you out!)
