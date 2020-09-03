@@ -1,8 +1,10 @@
 # ehr_topic_model/hpt/base_tuner.py
 
 from abc import abstractmethod
+from pathlib import Path
 from typing import Dict, Mapping, NoReturn, Union
 
+import yaml
 from optuna import Study, Trial, create_study
 from pandas import Series
 from sklearn.pipeline import Pipeline
@@ -51,6 +53,27 @@ class BaseTuner:
     def objective(self, trial: Trial) -> Union[float, NoReturn]:
         """Optuna objective method. Implement in child classes."""
         raise NotImplementedError
+
+    def save_and_print_best_hparams(self, dpath: Path, model_name: str) -> None:
+        """
+        Print best hyperparameters to stdout and save to disk.
+
+        Parameters
+        ----------
+        dpath : pathlib.Path
+            Output directory path.
+        model_name : str
+            Model name.
+        """
+        # Quick print
+        print("\nBest Params:\n")
+        k: str
+        v: Union[float, int]
+        for k, v in self.study.best_params.items():
+            print("{k}:\t{v}".format(k=k, v=v))
+
+        with Path(dpath, "{}_best_hparams.yml".format(model_name)).open("w") as f:
+            yaml.dump(self.study.best_params, f)
 
     def tune(
         self,
@@ -102,14 +125,6 @@ class BaseTuner:
             for step in self.pipeline.steps
             if "random_state" in step[1].get_params().keys()
         }
-
-        # Quick print
-        print("\nBest Params:\n")
-        k: str
-        v: Union[float, int]
-        for k, v in self.study.best_params.items():
-            print("{k}:\t{v}".format(k=k, v=v))
-
         return self.pipeline.set_params(**self.study.best_params, **seed_params).fit(
             self.X
         )

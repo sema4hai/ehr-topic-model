@@ -1,0 +1,4 @@
+data_file: inference_file.csv
+model_file: models/model.pkl
+topics_file: models/model_topics.tsv
+output_dir: output/
