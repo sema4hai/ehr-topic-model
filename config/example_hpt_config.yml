@@ -2,11 +2,6 @@ data_file: file.csv
 stopwords: stopwords.txt
 number_of_topic_top_words: 10
 
-inference:
-  raw_data: inference_file.csv
-  model_file: model.pkl
-  topics_file: model_topics.tsv
-
 tuner:
   trials: 5
   study:
@@ -42,4 +37,3 @@ lda_hparams:
   offset:
     - 10.0
     - 100.0
-

@@ -74,7 +74,7 @@ def _load_inference_data(dpath: Path) -> pd.DataFrame:
         A pandas dataframe containing the notes. Note ID serves as the index.
     """
     X: pd.DataFrame = pd.read_csv(
-        filepath_or_buffer=Path(dpath, INFERENCE_CONFIG["raw_data"]),
+        filepath_or_buffer=Path(dpath, INFERENCE_CONFIG["data_file"]),
         index_col="note_id",
         usecols=["note_id", "full_note_norm"],
     )
@@ -159,8 +159,6 @@ if __name__ == "__main__":
 
     args: Namespace = parser.parse_args()
     with Path(args.config).open() as config_f:
-        INFERENCE_CONFIG = yaml.load(stream=config_f, Loader=yaml.FullLoader)[
-            "inference"
-        ]
+        INFERENCE_CONFIG = yaml.load(stream=config_f, Loader=yaml.FullLoader)
 
     main()

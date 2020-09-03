@@ -99,7 +99,8 @@ log/
 models/
 
 # Real config files
-config/config.yml
+config/hpt_config.yml
+config/inference_config.yml
 config/stopwords.txt
 config/test/
 

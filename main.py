@@ -80,7 +80,6 @@ def _save_topics(topics: str, model_name: str, output_dpath: Path) -> None:
     output_dpath : pathlib.Path
         The output directory.
     """
-    output_dpath.mkdir(exist_ok=True)
     with Path(output_dpath, "{}_topics.tsv".format(model_name)).open("w") as topic_f:
         topic_f.write(topics)
 
@@ -96,6 +95,7 @@ def _score_model(tuner: BaseTuner, output_dpath: Path) -> None:
     output_dpath : pathlib.Path
         The output directory.
     """
+    output_dpath.mkdir(exist_ok=True)
     est: Pipeline = tuner.tune(
         **CONFIG["tuner"]["study"], **CONFIG["tuner"]["optimize"]
     )
