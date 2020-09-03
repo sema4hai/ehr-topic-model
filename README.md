@@ -45,6 +45,13 @@ Run `main.py` with Poetry to use the virtualenv.
 poetry run python main.py -c config/hpt_config.yml -p 0
 ```
 
+### Training with Fixed Hyperparameters
+Run `single_fit.py` with Poetry.
+Hyperparameters should be specified in its own YAML file. If previously generated through hyperparameter tuning, this file will be located within the previous output directory.
+```sh
+poetry run python single_fit.py -c config/single_fit.yml -b best_hyperparameters.yml
+```
+
 ### Inference
 * Place the data CSV file to perform inference on under `data/`. As with training, ensure the file has `note_id` and `full_note_norm` columns. Point the `data_file` option to this file within the configuration YAML.
 * Point `model_file` option to the serialized model file under the output directory in the previous step.
