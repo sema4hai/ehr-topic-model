@@ -39,19 +39,19 @@ poetry install --no-dev
 * Place your stopwords file under the `config/` folder and point the `stopwords` option within the configuration YAML to this file.
 * Edit the configuration YAML as needed.
 
-### Training
+### Training with Hyperparameter Tuning
 Run `main.py` with Poetry to use the virtualenv.
 ```sh
-poetry run python main.py -c config/config.yml -p 0
+poetry run python main.py -c config/hpt_config.yml -p 0
 ```
 
 ### Inference
-* Place the data CSV file to perform inference on under `data/`. As with training, ensure the file has `note_id` and `full_note_norm` columns. Point the `raw_data` option to this file within the configuration YAML.
+* Place the data CSV file to perform inference on under `data/`. As with training, ensure the file has `note_id` and `full_note_norm` columns. Point the `data_file` option to this file within the configuration YAML.
 * Point `model_file` option to the serialized model file under `models/`.
 * Topics require human interpretation, edit the topics file under `models/` or leave as the default names. Point the `topics_file` option to this file.
 Similar to training, run `topic.py` with Poetry.
 ```sh
-poetry run python topic.py -c config/config.yml
+poetry run python topic.py -c config/inference_config.yml
 ```
 
 ## Built With
