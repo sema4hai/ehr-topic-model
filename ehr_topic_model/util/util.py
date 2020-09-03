@@ -82,3 +82,22 @@ def topic_top_words(
         output += message + "\n"
     print()  # extra newline for stdout formatting
     return output
+
+
+def print_model_performance(model_name: str, metric_val: float) -> None:
+    """
+    Print model performance metric to stdout.
+
+    Parameters
+    ----------
+    model_name : str
+        The name of the topic model.
+    metric_val : float
+        The performance metric.
+    """
+    print_pad: str = "\n=====\n"  # padding
+    print(
+        "{pad}Model:\t\t\t{model}\nTopic Coherence:\t{metric_val}{pad}".format(
+            pad=print_pad, model=model_name, metric_val=metric_val
+        )
+    )

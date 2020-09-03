@@ -47,8 +47,8 @@ poetry run python main.py -c config/hpt_config.yml -p 0
 
 ### Inference
 * Place the data CSV file to perform inference on under `data/`. As with training, ensure the file has `note_id` and `full_note_norm` columns. Point the `data_file` option to this file within the configuration YAML.
-* Point `model_file` option to the serialized model file under `models/`.
-* Topics require human interpretation, edit the topics file under `models/` or leave as the default names. Point the `topics_file` option to this file.
+* Point `model_file` option to the serialized model file under the output directory in the previous step.
+* Topics require human interpretation, edit the topics file under the same output directory in the previous step or leave as the default names. Point the `topics_file` option to this file.
 Similar to training, run `topic.py` with Poetry.
 ```sh
 poetry run python topic.py -c config/inference_config.yml

@@ -10,19 +10,19 @@ import pandas as pd
 import yaml
 from sklearn.pipeline import Pipeline
 
-from ehr_topic_model.util import remove_nums
+from ehr_topic_model.util import load_data
 
 INFERENCE_CONFIG: Dict[str, Any] = {}
 
 
-def _load_topics(dpath: Path) -> pd.DataFrame:
+def _load_topics(project_home: Path) -> pd.DataFrame:
     """
     Load topics as column headers of a new dataframe.
 
     Parameters
     ----------
-    dpath : pathlib.Path
-        The directory where the topics TSV file is located.
+    project_home : pathlib.Path
+        Project home directory.
 
     Returns
     -------
@@ -31,7 +31,7 @@ def _load_topics(dpath: Path) -> pd.DataFrame:
         "most likely topic" column.
     """
     col_names: pd.Series = pd.read_table(
-        filepath_or_buffer=Path(dpath, INFERENCE_CONFIG["topics_file"]),
+        filepath_or_buffer=Path(project_home, INFERENCE_CONFIG["topics_file"]),
         header=None,
         usecols=[0],
     ).iloc[:, 0]
@@ -41,45 +41,21 @@ def _load_topics(dpath: Path) -> pd.DataFrame:
     return df
 
 
-def _load_model(dpath: Path) -> Pipeline:
+def _load_model(project_home: Path) -> Pipeline:
     """
     Load the serialized topic model.
 
     Parameters
     ----------
-    dpath : pathlib.Path
-        The directory where the serialized model file is located.
+    project_home : pathlib.Path
+        Project home directory.
 
     Returns
     -------
     sklearn.pipeline.Pipeline
         The previously trained topic model.
     """
-    return joblib.load(Path(dpath, INFERENCE_CONFIG["model_file"]))
-
-
-def _load_inference_data(dpath: Path) -> pd.DataFrame:
-    """
-    Load the data to perform inference on.
-    File must be a CSV file containing `note_id` and `full_note_norm` columns.
-
-    Parameters
-    ----------
-    dpath : pathlib.Path
-        The directory where the data CSV is located.
-
-    Returns
-    -------
-    pd.DataFrame
-        A pandas dataframe containing the notes. Note ID serves as the index.
-    """
-    X: pd.DataFrame = pd.read_csv(
-        filepath_or_buffer=Path(dpath, INFERENCE_CONFIG["data_file"]),
-        index_col="note_id",
-        usecols=["note_id", "full_note_norm"],
-    )
-    _ = X.apply(func=remove_nums, axis="columns")  # remove numbers from text
-    return X
+    return joblib.load(Path(project_home, INFERENCE_CONFIG["model_file"]))
 
 
 def _perform_inference(
@@ -119,8 +95,8 @@ def _save_inference(df: pd.DataFrame, output_dpath: Path) -> None:
         path_or_buf=Path(
             output_dpath,
             "{model_name}_{inference_file_name}_topic_probabilities.tsv".format(
-                model_name=INFERENCE_CONFIG["model_file"][:-4],
-                inference_file_name=INFERENCE_CONFIG["raw_data"][:-4],
+                model_name=INFERENCE_CONFIG["model_file"].split("/")[-1][:-4],
+                inference_file_name=INFERENCE_CONFIG["data_file"][:-4],
             ),
         ),
         sep="\t",
@@ -131,14 +107,18 @@ def _save_inference(df: pd.DataFrame, output_dpath: Path) -> None:
 def main() -> None:
     """Perform inference with the trained topic model."""
     project_home: Path = Path(__file__).parent
-    models_dpath: Path = Path(project_home, "models")
-    inference_df: pd.DataFrame = _load_topics(models_dpath)
-    model: Pipeline = _load_model(models_dpath)
-    raw_data: pd.DataFrame = _load_inference_data(Path(project_home, "data"))
+    inference_df: pd.DataFrame = _load_topics(project_home)
+    model: Pipeline = _load_model(project_home)
+    raw_data: pd.DataFrame = load_data(
+        Path(project_home, "data", INFERENCE_CONFIG["data_file"])
+    )
     _ = raw_data.apply(
         func=_perform_inference, axis="columns", inference_df=inference_df, model=model
     )
-    _save_inference(df=inference_df, output_dpath=Path(Path(__file__).parent, "output"))
+    _save_inference(
+        df=inference_df,
+        output_dpath=Path(Path(__file__).parent, INFERENCE_CONFIG["output_dir"]),
+    )
 
 
 if __name__ == "__main__":

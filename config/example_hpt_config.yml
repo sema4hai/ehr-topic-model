@@ -1,6 +1,7 @@
 data_file: file.csv
 stopwords: stopwords.txt
 number_of_topic_top_words: 10
+output_dir: models/
 
 tuner:
   trials: 5
