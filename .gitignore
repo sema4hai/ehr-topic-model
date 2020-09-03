@@ -101,6 +101,7 @@ models/
 # Real config files
 config/config.yml
 config/stopwords.txt
+config/test/
 
 # Notebooks
 notebooks/

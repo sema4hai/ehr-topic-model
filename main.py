@@ -4,7 +4,7 @@ import sys
 from argparse import ArgumentParser, Namespace, RawTextHelpFormatter
 from pathlib import Path
 from textwrap import dedent
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, Set, Tuple
 
 import joblib
 import pandas as pd
@@ -46,7 +46,7 @@ def _load_data(dpath: Path) -> pd.Series:
     return X.iloc[:, 0]
 
 
-def _load_stopwords(dpath: Path) -> List[str]:
+def _load_stopwords(dpath: Path) -> Set[str]:
     """
     Load stopwords from file.
 
@@ -60,11 +60,10 @@ def _load_stopwords(dpath: Path) -> List[str]:
     list of str
         Array of stopwords.
     """
-    stopwords: List[str] = []
+    stopwords: Set[str]
     line: str
     with Path(dpath, CONFIG["stopwords"]).open() as sw_f:
-        for line in sw_f:
-            stopwords.append(line.rstrip("\n"))
+        stopwords = {line.rstrip("\n") for line in sw_f}
     return stopwords
 
 
@@ -100,10 +99,11 @@ def _score_model(tuner: BaseTuner, output_dpath: Path) -> None:
     est: Pipeline = tuner.tune(
         **CONFIG["tuner"]["study"], **CONFIG["tuner"]["optimize"]
     )
+    model_name: str = est[-1].__class__.__name__
+    tuner.save_and_print_best_hparams(dpath=output_dpath, model_name=model_name)
 
     # Printing topic model and evaluation metric value to stdout.
     print_pad: str = "\n=====\n"  # padding
-    model_name: str = est[-1].__class__.__name__
     print(
         "{pad}Model:\t\t\t{model}\nTopic Coherence:\t{metric_val}{pad}".format(
             pad=print_pad, model=model_name, metric_val=tuner.study.best_value
@@ -145,7 +145,7 @@ def main(pipeline_idx: int) -> None:
 
     project_home: Path = Path(__file__).parent
     X: pd.Series = _load_data(Path(project_home, "data"))
-    custom_stopwords: List[str] = _load_stopwords(Path(project_home, "config"))
+    custom_stopwords: Set[str] = _load_stopwords(Path(project_home, "config"))
 
     # Initialize tuner objects, ordered by index.
     tuners: Tuple[BaseTuner, ...] = (
