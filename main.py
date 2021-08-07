@@ -86,7 +86,7 @@ def main(pipeline_idx: int) -> None:
             pipeline=Pipeline(
                 [
                     ("vect", CountVectorizer(stop_words=custom_stopwords)),
-                    ("decomp", LatentDirichletAllocation()),
+                    ("decomp", LatentDirichletAllocation(learning_method="online")),
                 ]
             ),
             hparams=dict(

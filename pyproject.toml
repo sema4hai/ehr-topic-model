@@ -6,15 +6,18 @@ authors = ["Michael (Minghao) Li <minghao.li-external@sema4genomics.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.8"
+kaleido = "*"
 numpy = "*"
 optuna = "*"
 pandas = "*"
+plotly = "*"
 pyyaml = "*"
 sklearn = "*"
 tmtoolkit = "*"
 
 [tool.poetry.dev-dependencies]
 ipykernel = "*"
+ipywidgets = "7.5"
 
 [build-system]
 requires = ["poetry>=0.12"]
